@@ -48,6 +48,8 @@ const userSchema = new mongoose.Schema({
             required: true
         }
     }]
+}, {
+    timestamps: true
 })
 
 userSchema.statics.findByCredentials = async (email, password) => {
@@ -109,7 +111,6 @@ userSchema.pre('remove', async function(next) {
     await Task.deleteMany({ owner: user._id})
     next()
 })
-
 
 const User = mongoose.model('User', userSchema)
 
