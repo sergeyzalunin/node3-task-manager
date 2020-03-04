@@ -1,0 +1,7 @@
+language: node_js
+env:
+    - PORT=3000
+    - JWT_SECRET=supersecrettoken
+    - MONGODB_URL=mongodb://127.0.0.1:27017/task-manager-api-test
+services:
+    - mongodb

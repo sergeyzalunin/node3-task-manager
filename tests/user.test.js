@@ -6,7 +6,8 @@ const { userOne, userOneId, setupDatabase } = require('./fixtures/db')
 beforeEach(setupDatabase)
 
 test('Should signip a new user', async () => {
-    const response = await request(app).post('/users').send({
+    const response = await request(app).post('/users').send(
+        {
         name: 'Roboto',
         email: 'test@mail.com',
         password: 'MySuperPAss433'
@@ -112,10 +113,55 @@ test('Should not update invalid user fields', async () => {
         .expect(400)
 })
 
-//TODO:
-// User Test Ideas
-//
-// Should not signup user with invalid name/email/password
-// Should not update user if unauthenticated
-// Should not update user with invalid name/email/password
-// Should not delete user if unauthenticated
+const shouldNotSignipUser = async (data) => {
+    await request(app)
+        .post('/users')
+        .send(data)
+        .expect(400)
+}
+
+test('should not signup user with invalid name/email/password', async () => {
+    // all empty
+    await shouldNotSignipUser({ name: '', email: '', password: '' })
+    // missing name
+    await shouldNotSignipUser({ name: '', email: 'test@test.ru', password: '1234567' })
+    // wrong email
+    await shouldNotSignipUser({ name: 'name', email: '@test.ru', password: '1234567' })
+    // short password
+    await shouldNotSignipUser({ name: 'name', email: 'test@test.ru', password: '123456' })
+})
+
+test('should not update user if unauthenticated', async () => {
+    await request(app)
+        .patch('/users/me')
+        .send({ name: 'name' })
+        .expect(401)
+})
+
+const shouldNotUpdateWrongUserData = async (data) => {
+    await request(app)
+        .patch('/users/me')
+        .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
+        .send(data)
+        .expect(400)
+}
+
+test('Should not update user with invalid name/email/password', async () => {
+    // all empty
+    await shouldNotUpdateWrongUserData({ name: '', email: '', password: '' })
+    // missing name
+    await shouldNotUpdateWrongUserData({ name: '', email: 'test@test.ru', password: '1234567' })
+    // wrong email
+    await shouldNotUpdateWrongUserData({ name: 'name', email: '@test.ru', password: '1234567' })
+    // short password
+    await shouldNotUpdateWrongUserData({ name: 'name', email: 'test@test.ru', password: '123456' })
+})
+
+test('Should not delete user if unauthenticated', async () => {
+    const response = await request(app)
+        .delete('/users/me')
+        .send()
+        .expect(401)
+
+    expect(response.body).toEqual({error: 'Please authenticate'})        
+})
